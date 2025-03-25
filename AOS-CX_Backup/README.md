@@ -21,7 +21,7 @@ This PowerShell script automates backing up running configurations from network 
 - Sets SSL certificate validation bypass (useful for switches with self-signed certificates).
 
 ### ✅ **Phase 2: Import Switch List**
-- Imports switches from a CSV file containing hostnames and IP addresses.
+- Imports switches from a CSV file - column A is "Hostname" and column B is "IP Addresses".
   - **Note:** The CSV is optional. It can easily be replaced by defining an array of IP addresses or hostnames directly within the script, especially useful when managing a small or static list of switches.
 
 ### ✅ **Phase 3: Switch Configuration Backup**
