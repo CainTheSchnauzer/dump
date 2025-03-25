@@ -77,5 +77,60 @@ The configuration XML file (`switchbackup-accountconfig.xml`) structure includes
 
 ---
 
+### 📝 Credential Function Example *(for reference)*
+
+Below is an example of the sanitized Credential Function script for securely loading credentials:
+
+```powershell
+function Decrypt-String {
+    param (
+        [string]$EncryptedString,
+        [string]$KeyPath
+    )
+
+    # Load the key
+    $keyString = Get-Content -Path $KeyPath
+    $key = [Convert]::FromBase64String($keyString)
+
+    # Decrypt the string
+    $SecureString = ConvertTo-SecureString -String $EncryptedString -Key $key
+    $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureString)
+    $DecryptedString = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+
+    return $DecryptedString
+}
+
+function Get-DecryptedSwitchBackupCredential {
+    param (
+        [string]$ConfigPath,
+        [string]$KeyPath
+    )
+
+    # Import the encrypted XML configuration
+    $encryptedConfig = Import-Clixml -Path $ConfigPath
+
+    # Import encryption key securely
+    $key = Get-Content -Path $KeyPath | ConvertTo-SecureString
+
+    # Decrypt credentials using the imported key
+    $decryptedCredential = [PSCredential]::new(
+        $encryptedConfig.Username,
+        ($encryptedConfig.Password | ConvertTo-SecureString -Key $key)
+    )
+
+    $decryptedAltCredential = [PSCredential]::new(
+        $encryptedConfig.AltUsername,
+        ($encryptedConfig.AltPassword | ConvertTo-SecureString -Key $key)
+    )
+
+    return [PSCustomObject]@{
+        Credential    = $decryptedCredential
+        AltCredential = $decryptedAltCredential
+        Input         = $encryptedConfig.Input
+        Output        = $encryptedConfig.Output
+    }
+}
+```
+
 This setup provides a flexible, secure, and easily maintained approach for automated configuration backups, suitable for networks of varying complexity.
 
